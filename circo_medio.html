@@ -5,13 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Circo PEAK 2026 Â· MEDIO Â· BCN4</title>
 <style>
-@font-face{font-family:'Amazon Ember Cd RC';src:local('Amazon Ember Cd RC'),local('AmazonEmberCdRC');}
 :root{
   --rojo:#C8102E; --rojo-osc:#8E0B20; --dorado:#F2C14E; --dorado-osc:#D9A520;
   --crema:#FFF8EC; --azul:#1B3A6B; --verde:#2E8B57; --morado:#5B2A86;
   --txt:#2a1a12; --sombra:rgba(0,0,0,.25);
   --color:#5B2A86; --sombra-color:#3a1a5e;
-  --font:'Amazon Ember Cd RC','Amazon Ember',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:var(--font);background:repeating-linear-gradient(90deg,var(--rojo) 0 40px,var(--crema) 40px 80px);min-height:100vh;color:var(--txt);}
@@ -31,8 +30,6 @@ body{font-family:var(--font);background:repeating-linear-gradient(90deg,var(--ro
 .card{background:#fff;border:3px solid var(--dorado);border-radius:18px;padding:20px;box-shadow:0 6px 0 var(--dorado-osc);margin-bottom:16px;}
 h2{text-align:center;color:var(--azul);font-size:20px;margin-bottom:8px;text-transform:uppercase;}
 .lead{text-align:center;color:#6a584c;font-size:14px;margin-bottom:16px;line-height:1.4;}
-.login-input{width:100%;border:3px solid var(--dorado);border-radius:14px;padding:14px;font-family:var(--font);font-size:20px;font-weight:800;text-align:center;letter-spacing:4px;color:var(--azul);background:var(--crema);margin:10px 0;}
-.login-err{color:var(--rojo);text-align:center;font-weight:700;font-size:13px;min-height:18px;margin-bottom:6px;}
 .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0;}
 .cat-btn{border:none;border-radius:14px;padding:14px 8px;cursor:pointer;color:#fff;font-family:var(--font);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;transition:transform .12s,box-shadow .12s;box-shadow:0 5px 0 rgba(0,0,0,.25);display:flex;flex-direction:column;align-items:center;gap:5px;}
 .cat-btn:hover{transform:translateY(-3px);} .cat-btn:active{transform:translateY(2px);}
@@ -65,7 +62,6 @@ h2{text-align:center;color:var(--azul);font-size:20px;margin-bottom:8px;text-tra
 @keyframes caer{to{transform:translateY(105vh) rotate(720deg);opacity:0;}}
 .foot{text-align:center;font-size:11px;color:#b0a090;padding:0 20px 20px;line-height:1.5;}
 </style>
-<!-- Firebase SDK compat -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
@@ -83,39 +79,28 @@ h2{text-align:center;color:var(--azul);font-size:20px;margin-bottom:8px;text-tra
 <div class="wrap">
   <div class="carpa"></div>
   <div class="head">
-    <div class="mini">L&amp;D Â· BCN4 Â· PEAK 2026</div>
-    <h1>ðŸŽª MEDIO</h1>
+    <div class="mini">L&amp;D &middot; BCN4 &middot; PEAK 2026</div>
+    <h1>MEDIO</h1>
   </div>
   <div class="pts-hero">
     <div class="num">30</div>
-    <div class="lab">puntos por acertar aquÃ­</div>
+    <div class="lab">puntos por acertar</div>
   </div>
   <div class="panel">
 
-    <!-- LOGIN -->
-    <div class="screen on" id="s-login">
+    <!-- CATEGORIA -->
+    <div class="screen on" id="s-cat">
       <div class="card">
-        <h2>ðŸ·ï¸ Tu Badge</h2>
-        <p class="lead">Introduce tu nÃºmero de badge para participar.</p>
-        <input class="login-input" id="badge-input" type="text" placeholder="Ej: 123456" maxlength="10" autocomplete="off"/>
-        <div class="login-err" id="login-err"></div>
-      </div>
-      <button class="btn sec" onclick="doLogin()">ðŸŽª Â¡Entrar!</button>
-    </div>
-
-    <!-- CATEGORÃA -->
-    <div class="screen" id="s-cat">
-      <div class="card">
-        <h2>ðŸŽª Elige categorÃ­a</h2>
-        <p class="lead">Â¿En quÃ© proceso quieres demostrar tu conocimiento?</p>
+        <h2>Elige categoria</h2>
+        <p class="lead">En que proceso quieres demostrar tu conocimiento?</p>
         <div class="cat-grid">
-          <button class="cat-btn cat-p2t" onclick="elegirCat('P2T')"><span class="ico">ðŸŽª</span>Pick to Tote</button>
-          <button class="cat-btn cat-p2r" onclick="elegirCat('P2R')"><span class="ico">ðŸ”„</span>Pick to Rebin</button>
-          <button class="cat-btn cat-pack" onclick="elegirCat('PACK')"><span class="ico">ðŸ“¦</span>Packing</button>
-          <button class="cat-btn cat-stow" onclick="elegirCat('STOW')"><span class="ico">ðŸ“Š</span>Stow</button>
-          <button class="cat-btn cat-safety" onclick="elegirCat('SAFETY')"><span class="ico">ðŸ”¥</span>Safety</button>
-          <button class="cat-btn cat-calidad" onclick="elegirCat('CALIDAD')"><span class="ico">âœ…</span>Calidad</button>
-          <button class="cat-btn cat-procesos" onclick="elegirCat('PROCESOS')"><span class="ico">âš™ï¸</span>Procesos</button>
+          <button class="cat-btn cat-p2t" onclick="elegirCat('P2T')"><span class="ico">&#127914;</span>Pick to Tote</button>
+          <button class="cat-btn cat-p2r" onclick="elegirCat('P2R')"><span class="ico">&#128260;</span>Pick to Rebin</button>
+          <button class="cat-btn cat-pack" onclick="elegirCat('PACK')"><span class="ico">&#128230;</span>Packing</button>
+          <button class="cat-btn cat-stow" onclick="elegirCat('STOW')"><span class="ico">&#128202;</span>Stow</button>
+          <button class="cat-btn cat-safety" onclick="elegirCat('SAFETY')"><span class="ico">&#128293;</span>Safety</button>
+          <button class="cat-btn cat-calidad" onclick="elegirCat('CALIDAD')"><span class="ico">&#9989;</span>Calidad</button>
+          <button class="cat-btn cat-procesos" onclick="elegirCat('PROCESOS')"><span class="ico">&#9881;</span>Procesos</button>
         </div>
       </div>
     </div>
@@ -126,9 +111,9 @@ h2{text-align:center;color:var(--azul);font-size:20px;margin-bottom:8px;text-tra
         <div style="text-align:center"><span class="badge-tag" id="preg-badge">Pregunta</span></div>
         <div class="pts-tag">Puntos si aciertas: <b>30</b></div>
         <div class="lang-bar">
-          <button class="lang-btn act" id="btn-es" onclick="setLang('es')">ðŸ‡ªðŸ‡¸ ES</button>
-          <button class="lang-btn" id="btn-en" onclick="setLang('en')">ðŸ‡¬ðŸ‡§ EN</button>
-          <button class="lang-btn" id="btn-ar" onclick="setLang('ar')">ðŸ‡¸ðŸ‡¦ AR</button>
+          <button class="lang-btn act" id="btn-es" onclick="setLang('es')">ES</button>
+          <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+          <button class="lang-btn" id="btn-ar" onclick="setLang('ar')">AR</button>
         </div>
         <div class="preg" id="preg-txt"></div>
         <div class="ops" id="preg-ops"></div>
@@ -143,11 +128,11 @@ h2{text-align:center;color:var(--azul);font-size:20px;margin-bottom:8px;text-tra
         <div class="resmsg" id="res-msg"></div>
         <div class="premio" id="res-premio"></div>
       </div>
-      <button class="btn" onclick="reiniciar()">ðŸ”„ Siguiente participante</button>
+      <button class="btn" onclick="reiniciar()">Siguiente participante</button>
     </div>
 
   </div>
-  <div class="foot">ðŸŽª Circo PEAK 2026 Â· L&amp;D Â· BCN4 Â· MEDIO (30 pts)</div>
+  <div class="foot">Circo PEAK 2026 &middot; L&amp;D &middot; BCN4 &middot; MEDIO (30 pts)</div>
 </div>
 
 <script>
@@ -520,34 +505,18 @@ const PREG = {
 
 
 
-const CAT_NAMES={P2T:"ðŸŽª Pick to Tote",P2R:"ðŸ”„ Pick to Rebin",PACK:"ðŸ“¦ Packing",STOW:"ðŸ“Š Stow",SAFETY:"ðŸ”¥ Safety",CALIDAD:"âœ… Calidad",PROCESOS:"âš™ï¸ Procesos"};
+const CAT_NAMES={P2T:"Pick to Tote",P2R:"Pick to Rebin",PACK:"Packing",STOW:"Stow",SAFETY:"Safety",CALIDAD:"Calidad",PROCESOS:"Procesos"};
 const PTS_HUECO=30;
-let pregActual=null,catActual=null,langActual='es',opcionesOrden=[],badgeActual='';
+let pregActual=null,catActual=null,langActual='es',opcionesOrden=[];
 
 let _cache=[];
 function _syncFirebase(){
-  if(window._fbOnValue){
-    window._fbOnValue(arr=>{ _cache=arr; });
-  } else { setTimeout(_syncFirebase,300); }
+  if(window._fbOnValue){ window._fbOnValue(arr=>{ _cache=arr; }); }
+  else { setTimeout(_syncFirebase,300); }
 }
 setTimeout(_syncFirebase,500);
 
-function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');if(id==='s-login')setTimeout(()=>document.getElementById('badge-input').focus(),200);}
-
-function doLogin(){
-  const inp=document.getElementById('badge-input');
-  const badge=inp.value.trim().toUpperCase();
-  const err=document.getElementById('login-err');
-  if(!badge){err.textContent='Introduce tu badge.';return;}
-  if(_cache.find(r=>r.badge===badge)){err.textContent='âŒ Este badge ya ha participado. Â¡Gracias!';return;}
-  err.textContent='';badgeActual=badge;inp.value='';
-  show('s-cat');
-}
-document.addEventListener('DOMContentLoaded',()=>{
-  const inp=document.getElementById('badge-input');
-  if(inp) inp.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-  setTimeout(()=>inp&&inp.focus(),200);
-});
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');}
 
 function elegirCat(cat){
   catActual=cat;
@@ -599,24 +568,25 @@ function resultado(tipo){
   const now=new Date();
   const hora=now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
   const totalPts=tipo==='win'?PTS_HUECO:0;
-  const entrada={badge:badgeActual,categoria:catActual,ptsTiro:PTS_HUECO,acerto:tipo==='win',totalPts:totalPts,hora:hora,ts:now.getTime(),satelite:'MEDIO'};
+  const entrada={badge:'ANONIMO',categoria:catActual,ptsTiro:PTS_HUECO,acerto:tipo==='win',totalPts:totalPts,hora:hora,ts:now.getTime(),satelite:'MEDIO'};
   if(window._fbPush) window._fbPush(entrada); else setTimeout(()=>window._fbPush&&window._fbPush(entrada),800);
   const ico=document.getElementById('res-ico'),tit=document.getElementById('res-tit'),
         msg=document.getElementById('res-msg'),pr=document.getElementById('res-premio');
   tit.className='restit '+(tipo==='win'?'win':'snack');
   if(tipo==='win'){
-    confeti();ico.textContent='ðŸŽ‰';tit.textContent='Â¡Al sorteo final!';
-    msg.innerHTML='Â¡PunterÃ­a y conocimiento! Sumaste <b>'+totalPts+' puntos</b>.';
-    pr.innerHTML='ðŸŽŸï¸ ENTRAS EN EL SORTEO FINAL';
+    confeti();
+    ico.textContent='&#127881;';tit.textContent='Al sorteo final!';
+    msg.innerHTML='Punteria y conocimiento! Sumaste <b>'+totalPts+' puntos</b>.';
+    pr.innerHTML='&#127903; ENTRAS EN EL SORTEO FINAL';
   }else{
-    ico.textContent='ðŸ¬';tit.textContent='Â¡Gracias por jugar!';
-    msg.innerHTML='Por participar te llevas un detalle. Â¡Sigue intentÃ¡ndolo!';
-    pr.innerHTML='ðŸŽ SNACK / DETALLE POR PARTICIPAR';
+    ico.textContent='&#127852;';tit.textContent='Gracias por jugar!';
+    msg.innerHTML='Por participar te llevas un detalle. Sigue intentandolo!';
+    pr.innerHTML='&#127873; SNACK / DETALLE POR PARTICIPAR';
   }
   show('s-res');
 }
 
-function reiniciar(){pregActual=null;catActual=null;opcionesOrden=[];langActual='es';badgeActual='';show('s-login');}
+function reiniciar(){pregActual=null;catActual=null;opcionesOrden=[];langActual='es';show('s-cat');}
 
 function confeti(){
   const cols=['#C8102E','#F2C14E','#1B3A6B','#2E8B57','#5B2A86'];
