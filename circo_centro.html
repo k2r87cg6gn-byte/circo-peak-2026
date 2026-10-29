@@ -106,17 +106,22 @@ h2{text-align:center;color:var(--azul);font-size:20px;margin-bottom:8px;text-tra
   <div class="carpa"></div>
   <div class="head">
     <div class="mini">L&amp;D &middot; BCN4 &middot; PEAK 2026</div>
-    <h1>CENTRO</h1>
+    <h1 id="titulo-zona">ELEFANTE</h1>
   </div>
   <div class="pts-hero">
     <div class="num">50</div>
-    <div class="lab">puntos por acertar</div>
+    <div class="lab" id="pts-hero-lab">puntos por acertar</div>
   </div>
   <div class="panel">
 
     <!-- LOGIN -->
     <div class="screen on" id="s-badge">
       <div class="card">
+        <div class="lang-bar" style="margin-bottom:16px;">
+          <button class="lang-btn act" id="login-btn-es" onclick="setLoginLang('es')">🇪🇸 Español</button>
+          <button class="lang-btn" id="login-btn-en" onclick="setLoginLang('en')">🇬🇧 English</button>
+          <button class="lang-btn" id="login-btn-ar" onclick="setLoginLang('ar')">🇸🇦 العربية</button>
+        </div>
         <h2>&#128100; Introduce tu login</h2>
         <p class="lead">Escribe tu <b>User ID</b> (login de Amazon) para participar</p>
         <div class="badge-input-wrap">
@@ -148,7 +153,7 @@ h2{text-align:center;color:var(--azul);font-size:20px;margin-bottom:8px;text-tra
     <div class="screen" id="s-preg">
       <div class="card">
         <div style="text-align:center"><span class="badge-tag" id="preg-badge">Pregunta</span></div>
-        <div class="pts-tag">Puntos si aciertas: <b>50</b></div>
+        <div class="pts-tag" id="pts-tag-preg">Puntos si aciertas: <b>50</b></div>
         <div class="lang-bar">
           <button class="lang-btn act" id="btn-es" onclick="setLang('es')">ES</button>
           <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
@@ -167,11 +172,11 @@ h2{text-align:center;color:var(--azul);font-size:20px;margin-bottom:8px;text-tra
         <div class="resmsg" id="res-msg"></div>
         <div class="premio" id="res-premio"></div>
       </div>
-      <button class="btn" onclick="reiniciar()">Siguiente participante</button>
+      <button class="btn" id="btn-siguiente" onclick="reiniciar()">Siguiente participante</button>
     </div>
 
   </div>
-  <div class="foot">Circo PEAK 2026 &middot; L&amp;D &middot; BCN4 &middot; CENTRO (50 pts)</div>
+  <div class="foot">Circo PEAK 2026 &middot; L&amp;D &middot; BCN4 &middot; ELEFANTE (50 pts)</div>
 </div>
 
 <script>
@@ -552,6 +557,49 @@ function show(id){
   document.getElementById(id).classList.add('on');
 }
 
+// ── IDIOMA EN LOGIN ─────────────────────────────────────────────
+const LOGIN_TEXTS = {
+  es: { h2: '&#128100; Introduce tu login', lead: 'Escribe tu <b>User ID</b> (login de Amazon) para participar', btn: 'Continuar', placeholder: 'Ej: gontonic' },
+  en: { h2: '&#128100; Enter your login',   lead: 'Type your <b>User ID</b> (Amazon login) to participate',    btn: 'Continue',  placeholder: 'e.g. gontonic' },
+  ar: { h2: '&#128100; أدخل تسجيل دخولك',  lead: 'اكتب <b>معرف المستخدم</b> (تسجيل دخول أمازون) للمشاركة',  btn: 'متابعة',    placeholder: 'مثال: gontonic' }
+};
+
+const CAT_TEXTS = {
+  es: { h2: 'Elige categoria', lead: 'En que proceso quieres demostrar tu conocimiento?' },
+  en: { h2: 'Choose a category', lead: 'Which process do you want to show your knowledge in?' },
+  ar: { h2: 'اختر فئة', lead: 'في أي عملية تريد إظهار معرفتك؟' }
+};
+
+const GLOBAL_TEXTS = {
+  es: { pts_hero: 'PUNTOS POR ACERTAR', pts_tag: 'Puntos si aciertas: <b>50</b>', btn_sig: 'Siguiente participante', zona: 'ELEFANTE' },
+  en: { pts_hero: 'POINTS FOR CORRECT ANSWER', pts_tag: 'Points if correct: <b>50</b>', btn_sig: 'Next participant', zona: 'ELEPHANT' },
+  ar: { pts_hero: 'نقاط عند الإجابة الصحيحة', pts_tag: 'النقاط عند الإجابة الصحيحة: <b>50</b>', btn_sig: 'المشارك التالي', zona: 'الفيل' }
+};
+
+function setLoginLang(lang){
+  langActual = lang;
+  ['es','en','ar'].forEach(l=>{
+    document.getElementById('login-btn-'+l).classList.toggle('act', l===lang);
+  });
+  const t = LOGIN_TEXTS[lang];
+  document.querySelector('#s-badge h2').innerHTML = t.h2;
+  document.querySelector('#s-badge .lead').innerHTML = t.lead;
+  document.getElementById('badge-btn').textContent = t.btn;
+  document.getElementById('badge-input').placeholder = t.placeholder;
+  document.getElementById('s-badge').style.direction = lang==='ar' ? 'rtl' : 'ltr';
+  // Actualizar pantalla categorías
+  const ct = CAT_TEXTS[lang];
+  document.querySelector('#s-cat h2').innerHTML = ct.h2;
+  document.querySelector('#s-cat .lead').innerHTML = ct.lead;
+  document.getElementById('s-cat').style.direction = lang==='ar' ? 'rtl' : 'ltr';
+  // Textos globales
+  const g = GLOBAL_TEXTS[lang];
+  document.getElementById('pts-hero-lab').textContent = g.pts_hero;
+  document.getElementById('pts-tag-preg').innerHTML = g.pts_tag;
+  document.getElementById('btn-siguiente').textContent = g.btn_sig;
+  document.getElementById('titulo-zona').textContent = g.zona;
+}
+
 // ── LOGIN VERIFICATION ──────────────────────────────────────────
 function verificarBadge(){
   const input = document.getElementById('badge-input');
@@ -568,34 +616,59 @@ function verificarBadge(){
   btn.innerHTML = '<span class="spinner"></span>Verificando...';
   alerta.style.display = 'none';
 
+  const ALERT_TEXTS = {
+    es: {
+      no_reg:   '&#10060; Login no registrado. Pide al manager que escanee tu badge primero.',
+      no_activ: '&#9888; Tu badge no ha sido activado todav&iacute;a. Pide al manager que escanee tu badge.',
+      ya_jug:   '&#9203; Ya has participado. &iexcl;Suerte en el sorteo final!',
+      ok:       '&#10003; Bienvenido/a <b>' + login + '</b>! Elige tu categor&iacute;a.',
+      wifi:     '&#9888; Error de conexi&oacute;n. Comprueba el WiFi e int&eacute;ntalo de nuevo.'
+    },
+    en: {
+      no_reg:   '&#10060; Login not registered. Ask the manager to scan your badge first.',
+      no_activ: '&#9888; Your badge has not been activated yet. Ask the manager to scan your badge.',
+      ya_jug:   '&#9203; You have already participated. Good luck in the final draw!',
+      ok:       '&#10003; Welcome <b>' + login + '</b>! Choose your category.',
+      wifi:     '&#9888; Connection error. Check the WiFi and try again.'
+    },
+    ar: {
+      no_reg:   '&#10060; تسجيل الدخول غير مسجل. اطلب من المدير مسح شارتك أولاً.',
+      no_activ: '&#9888; لم يتم تفعيل شارتك بعد. اطلب من المدير مسح شارتك.',
+      ya_jug:   '&#9203; لقد شاركت بالفعل. حظاً موفقاً في السحب النهائي!',
+      ok:       '&#10003; مرحباً <b>' + login + '</b>! اختر فئتك.',
+      wifi:     '&#9888; خطأ في الاتصال. تحقق من WiFi وحاول مجدداً.'
+    }
+  };
+  const at = ALERT_TEXTS[langActual] || ALERT_TEXTS.es;
+
   window._fbGetParticipante(login).then(data => {
     btn.disabled = false;
-    btn.innerHTML = 'Continuar';
+    btn.textContent = LOGIN_TEXTS[langActual].btn;
 
     if(!data){
-      mostrarAlerta(alerta, 'error', '&#10060; Login no registrado. Pide al manager que escanee tu badge primero.');
+      mostrarAlerta(alerta, 'error', at.no_reg);
       return;
     }
 
     if(!data.activo){
-      mostrarAlerta(alerta, 'warn', '&#9888; Tu badge no ha sido activado todav&iacute;a. Pide al manager que escanee tu badge.');
+      mostrarAlerta(alerta, 'warn', at.no_activ);
       return;
     }
 
     if(data.participoEnPregunta){
-      mostrarAlerta(alerta, 'warn', '&#9203; Ya has participado. &iexcl;Suerte en el sorteo final!');
+      mostrarAlerta(alerta, 'warn', at.ya_jug);
       return;
     }
 
     // OK — puede jugar
     badgeActual = login;
-    mostrarAlerta(alerta, 'ok', '&#10003; Bienvenido/a <b>' + login + '</b>! Elige tu categor&iacute;a.');
+    mostrarAlerta(alerta, 'ok', at.ok);
     setTimeout(() => { show('s-cat'); }, 1000);
 
   }).catch(err => {
     btn.disabled = false;
-    btn.innerHTML = 'Continuar';
-    mostrarAlerta(alerta, 'error', '&#9888; Error de conexi&oacute;n. Comprueba el WiFi e int&eacute;ntalo de nuevo.');
+    btn.textContent = LOGIN_TEXTS[langActual].btn;
+    mostrarAlerta(alerta, 'error', at.wifi);
     console.error('Firebase error:', err);
   });
 }
@@ -629,6 +702,12 @@ function setLang(lang){
   langActual = lang;
   document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('act'));
   document.getElementById('btn-' + lang).classList.add('act');
+  // Textos globales
+  const g = GLOBAL_TEXTS[lang];
+  document.getElementById('pts-hero-lab').textContent = g.pts_hero;
+  document.getElementById('pts-tag-preg').innerHTML = g.pts_tag;
+  document.getElementById('btn-siguiente').textContent = g.btn_sig;
+  document.getElementById('titulo-zona').textContent = g.zona;
   if(!pregActual) return;
   document.getElementById('preg-txt').innerHTML = pregActual[lang];
   const cont = document.getElementById('preg-ops');
@@ -639,16 +718,20 @@ function setLang(lang){
       [opcionesOrden[i],opcionesOrden[j]]=[opcionesOrden[j],opcionesOrden[i]];
     }
   }
+  // Solo conservar estados si ya se respondió (hay algún botón ok o no)
+  const yaRespondido = [...cont.querySelectorAll('.op')].some(b=>b.classList.contains('ok')||b.classList.contains('no'));
   const prevStates = {};
-  cont.querySelectorAll('.op').forEach((b,idx)=>{
-    prevStates[idx]={ok:b.classList.contains('ok'),no:b.classList.contains('no'),disabled:b.disabled};
-  });
+  if(yaRespondido){
+    cont.querySelectorAll('.op').forEach((b,idx)=>{
+      prevStates[idx]={ok:b.classList.contains('ok'),no:b.classList.contains('no'),disabled:b.disabled};
+    });
+  }
   cont.innerHTML = '';
   opcionesOrden.forEach((oi, idx)=>{
     const b = document.createElement('button');
     b.className = 'op';
     b.innerHTML = pregActual.op[lang][oi];
-    if(prevStates[idx]){
+    if(yaRespondido && prevStates[idx]){
       if(prevStates[idx].ok) b.classList.add('ok');
       if(prevStates[idx].no) b.classList.add('no');
       if(prevStates[idx].disabled) b.disabled = true;
@@ -711,17 +794,47 @@ function resultado(tipo){
 
   tit.className = 'restit ' + (tipo==='win' ? 'win' : 'snack');
 
+  const RES_TEXTS = {
+    es: {
+      win_tit: '¡Al sorteo final!',
+      win_msg: '¡Puntería y conocimiento! Sumaste <b>' + totalPts + ' puntos</b>.',
+      win_pr:  '&#127903; ENTRAS EN EL SORTEO FINAL',
+      fail_tit: '¡Gracias por jugar!',
+      fail_msg: 'Esperamos que te guste nuestro detalle.',
+      fail_pr:  '&#127873; SNACK / DETALLE POR PARTICIPAR'
+    },
+    en: {
+      win_tit: 'Into the final draw!',
+      win_msg: 'Great aim and knowledge! You earned <b>' + totalPts + ' points</b>.',
+      win_pr:  '&#127903; YOU ENTER THE FINAL DRAW',
+      fail_tit: 'Thanks for playing!',
+      fail_msg: 'We hope you enjoy our little gift.',
+      fail_pr:  '&#127873; SNACK / GIFT FOR PARTICIPATING'
+    },
+    ar: {
+      win_tit: 'إلى السحب النهائي!',
+      win_msg: 'إصابة ومعرفة! حصلت على <b>' + totalPts + ' نقطة</b>.',
+      win_pr:  '&#127903; تدخل السحب النهائي',
+      fail_tit: 'شكراً على المشاركة!',
+      fail_msg: 'نأمل أن يعجبك هديتنا الصغيرة.',
+      fail_pr:  '&#127873; وجبة خفيفة / هدية للمشاركة'
+    }
+  };
+
+  const rt = RES_TEXTS[langActual] || RES_TEXTS.es;
+  document.getElementById('s-res').style.direction = langActual === 'ar' ? 'rtl' : 'ltr';
+
   if(tipo==='win'){
     confeti();
     ico.innerHTML = '&#127881;';
-    tit.textContent = 'Al sorteo final!';
-    msg.innerHTML = 'Punter&iacute;a y conocimiento! Sumaste <b>' + totalPts + ' puntos</b>.';
-    pr.innerHTML = '&#127903; ENTRAS EN EL SORTEO FINAL';
+    tit.textContent = rt.win_tit;
+    msg.innerHTML = rt.win_msg;
+    pr.innerHTML = rt.win_pr;
   } else {
     ico.innerHTML = '&#127852;';
-    tit.textContent = 'Gracias por jugar!';
-    msg.innerHTML = 'Por participar te llevas un detalle. &iexcl;Sigue intent&aacute;ndolo!';
-    pr.innerHTML = '&#127873; SNACK / DETALLE POR PARTICIPAR';
+    tit.textContent = rt.fail_tit;
+    msg.innerHTML = rt.fail_msg;
+    pr.innerHTML = rt.fail_pr;
   }
   show('s-res');
 }
@@ -738,6 +851,9 @@ function reiniciar(){
   const alerta = document.getElementById('badge-alert');
   alerta.style.display = 'none';
   alerta.className = 'alert-box';
+  // Limpiar botones de pregunta del participante anterior
+  document.getElementById('preg-ops').innerHTML = '';
+  document.getElementById('preg-txt').innerHTML = '';
   show('s-badge');
 }
 
