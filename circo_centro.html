@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Circo PEAK 2026 Â· CENTRO Â· BCN4</title>
+<title>Circo PEAK 2026 &middot; CENTRO &middot; BCN4</title>
 <style>
 :root{
   --rojo:#C8102E; --rojo-osc:#8E0B20; --dorado:#F2C14E; --dorado-osc:#D9A520;
@@ -58,9 +58,20 @@ h2{text-align:center;color:var(--azul);font-size:20px;margin-bottom:8px;text-tra
 .btn{display:block;width:100%;background:var(--azul);color:#fff;border:none;border-radius:14px;padding:14px;font-family:var(--font);font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:1px;cursor:pointer;box-shadow:0 5px 0 #0e2342;transition:transform .1s;margin-bottom:8px;}
 .btn:hover{transform:translateY(-2px);} .btn:active{transform:translateY(3px);}
 .btn.sec{background:var(--color);box-shadow:0 5px 0 var(--sombra-color);}
+.btn:disabled{background:#aaa;box-shadow:0 5px 0 #888;cursor:not-allowed;transform:none;}
 .confetti{position:fixed;width:10px;height:14px;top:-20px;z-index:99;opacity:.9;animation:caer linear forwards;}
 @keyframes caer{to{transform:translateY(105vh) rotate(720deg);opacity:0;}}
 .foot{text-align:center;font-size:11px;color:#b0a090;padding:0 20px 20px;line-height:1.5;}
+/* Badge input screen */
+.badge-input-wrap{display:flex;flex-direction:column;gap:12px;margin-top:8px;}
+.badge-field{border:3px solid var(--dorado);border-radius:12px;padding:14px 16px;font-family:var(--font);font-size:20px;font-weight:800;text-align:center;letter-spacing:3px;text-transform:uppercase;width:100%;color:var(--azul);background:#fff;outline:none;}
+.badge-field:focus{border-color:var(--azul);}
+.alert-box{border-radius:12px;padding:14px 16px;text-align:center;font-size:14px;font-weight:700;display:none;}
+.alert-box.error{background:#fde8e8;color:#c0392b;border:2px solid #e74c3c;}
+.alert-box.warn{background:#fff3cd;color:#856404;border:2px solid #ffc107;}
+.alert-box.ok{background:#d4edda;color:#155724;border:2px solid #28a745;}
+.spinner{display:inline-block;width:18px;height:18px;border:3px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg);}}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -69,9 +80,24 @@ h2{text-align:center;color:var(--azul);font-size:20px;margin-bottom:8px;text-tra
     databaseURL: 'https://circo-peak-2026-default-rtdb.europe-west1.firebasedatabase.app'
   });
   const _fbDb = firebase.database();
+
+  // Registros de jugadas (historial)
   const _fbRef = _fbDb.ref('registros');
   window._fbPush = (data) => _fbRef.push(data);
-  window._fbOnValue = (cb) => _fbRef.on('value', snap => { const v=snap.val(); cb(v ? Object.values(v) : []); });
+
+  // Participantes (control de acceso)
+  const _fbPart = _fbDb.ref('participantes');
+
+  // Leer participante por login (login = key en /participantes)
+  window._fbGetParticipante = (login) => {
+    return _fbPart.child(login).once('value').then(snap => snap.val());
+  };
+
+  // Actualizar participante tras jugar
+  window._fbUpdateParticipante = (login, data) => {
+    return _fbPart.child(login).update(data);
+  };
+
   console.log('Firebase OK');
 </script>
 </head>
@@ -88,8 +114,21 @@ h2{text-align:center;color:var(--azul);font-size:20px;margin-bottom:8px;text-tra
   </div>
   <div class="panel">
 
+    <!-- LOGIN -->
+    <div class="screen on" id="s-badge">
+      <div class="card">
+        <h2>&#128100; Introduce tu login</h2>
+        <p class="lead">Escribe tu <b>User ID</b> (login de Amazon) para participar</p>
+        <div class="badge-input-wrap">
+          <input class="badge-field" type="text" id="badge-input" placeholder="Ej: gontonic" maxlength="20" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+          <div class="alert-box" id="badge-alert"></div>
+          <button class="btn" id="badge-btn" onclick="verificarBadge()">Continuar</button>
+        </div>
+      </div>
+    </div>
+
     <!-- CATEGORIA -->
-    <div class="screen on" id="s-cat">
+    <div class="screen" id="s-cat">
       <div class="card">
         <h2>Elige categoria</h2>
         <p class="lead">En que proceso quieres demostrar tu conocimiento?</p>
@@ -139,47 +178,47 @@ h2{text-align:center;color:var(--azul);font-size:20px;margin-bottom:8px;text-tra
 const PREG = {
   "P2T": [
     {
-      es: "¿Qué tienes que hacer cuando no encuentras un artículo en la Bin?",
+      es: "&#191;Qu&eacute; tienes que hacer cuando no encuentras un art&iacute;culo en la Bin?",
       en: "What do you do when you can't find an item in the Bin?",
       ar: "ماذا تفعل عندما لا تجد عنصراً في الحاوية؟",
       op: {
-        es: ["Cogerla de otra Bin si está allí","Marcar faltante en pantalla","Avisar al Manager","Asegurarme que estoy en la Bin correcta y escanear uno a uno todos los artículos"],
+        es: ["Cogerla de otra Bin si est&aacute; all&iacute;","Marcar faltante en pantalla","Avisar al Manager","Asegurarme que estoy en la Bin correcta y escanear uno a uno todos los art&iacute;culos"],
         en: ["Take it from another Bin if it's there","Mark as missing on screen","Notify the Manager","Make sure I'm in the correct Bin and scan all items one by one"],
         ar: ["أخذها من حاوية أخرى إذا كانت هناك","تحديد العنصر المفقود على الشاشة","إخطار المدير","التأكد من أنني في الحاوية الصحيحة ومسح جميع العناصر واحدة تلو الأخرى"]
       }, c: 3
     },
     {
-      es: "¿Cómo gestiono un cambio de tote?",
+      es: "&#191;C&oacute;mo gestiono un cambio de tote?",
       en: "How do I manage a tote change?",
       ar: "كيف أدير تغيير التوت؟",
       op: {
-        es: ["Escaneo el artículo y confirmo en el RAC","Escaneo el artículo, lo introduzco en el nuevo tote y confirmo en el RAC","Escaneo el artículo, lo introduzco en el nuevo tote y cambio el tote lleno sin confirmar en el RAC","Aviso al Manager"],
+        es: ["Escaneo el art&iacute;culo y confirmo en el RAC","Escaneo el art&iacute;culo, lo introduzco en el nuevo tote y confirmo en el RAC","Escaneo el art&iacute;culo, lo introduzco en el nuevo tote y cambio el tote lleno sin confirmar en el RAC","Aviso al Manager"],
         en: ["I scan the item and confirm on the RAC","I scan the item, put it in the new tote and confirm on the RAC","I scan the item, put it in the new tote and change the full tote without confirming on the RAC","I notify the Manager"],
         ar: ["أمسح العنصر وأؤكد على RAC","أمسح العنصر وأضعه في التوت الجديد وأؤكد على RAC","أمسح العنصر وأضعه في التوت الجديد وأغير التوت الممتلئ دون تأكيد على RAC","أخطر المدير"]
       }, c: 2
     },
     {
-      es: "¿Cómo gestiono un Damage en Pick to Tote?",
+      es: "&#191;C&oacute;mo gestiono un Damage en Pick to Tote?",
       en: "How do I handle a Damage in Pick to Tote?",
       ar: "كيف أتعامل مع التلف في Pick to Tote؟",
       op: {
-        es: ["Escaneo el artículo, en pantalla confirmo Damage, escaneo el tote rojo e introduzco el artículo en el tote rojo","Escaneo el artículo, en pantalla confirmo Damage, escaneo cualquier tote y lo mando a Problem Solve","Aviso al Manager","Creo un Andon"],
+        es: ["Escaneo el art&iacute;culo, en pantalla confirmo Damage, escaneo el tote rojo e introduzco el art&iacute;culo en el tote rojo","Escaneo el art&iacute;culo, en pantalla confirmo Damage, escaneo cualquier tote y lo mando a Problem Solve","Aviso al Manager","Creo un Andon"],
         en: ["I scan the item, confirm Damage on screen, scan the red tote and place the item in the red tote","I scan the item, confirm Damage on screen, scan any tote and send it to Problem Solve","I notify the Manager","I create an Andon"],
         ar: ["أمسح العنصر وأؤكد التلف على الشاشة وأمسح التوت الأحمر وأضع العنصر فيه","أمسح العنصر وأؤكد التلف وأمسح أي توت وأرسله لحل المشكلات","أخطر المدير","أنشئ Andon"]
       }, c: 0
     },
     {
-      es: "¿Qué es el One Piece Flow en Pick to Tote?",
+      es: "&#191;Qu&eacute; es el One Piece Flow en Pick to Tote?",
       en: "What is One Piece Flow in Pick to Tote?",
       ar: "ما هو One Piece Flow في Pick to Tote؟",
       op: {
-        es: ["Coger varios artículos a la vez para ir más rápido","Escanear y colocar un artículo cada vez en el tote antes de coger el siguiente","Llenar el tote antes de escanearlo","Un Manager en cada planta"],
+        es: ["Coger varios art&iacute;culos a la vez para ir m&aacute;s r&aacute;pido","Escanear y colocar un art&iacute;culo cada vez en el tote antes de coger el siguiente","Llenar el tote antes de escanearlo","Un Manager en cada planta"],
         en: ["Pick multiple items at once to go faster","Scan and place one item at a time in the tote before picking the next","Fill the tote before scanning","A Manager on each floor"],
         ar: ["أخذ عدة عناصر دفعة واحدة للعمل بسرعة أكبر","مسح وضع عنصر واحد في التوت قبل أخذ العنصر التالي","ملء التوت قبل المسح","مدير في كل طابق"]
       }, c: 1
     },
     {
-      es: "¿Cuál es la diferencia entre un Andon de Seguridad y uno de Seguridad Inmediata?",
+      es: "&#191;Cu&aacute;l es la diferencia entre un Andon de Seguridad y uno de Seguridad Inmediata?",
       en: "What is the difference between a Safety Andon and an Immediate Safety Andon?",
       ar: "ما الفرق بين Andon الأمان و Andon الأمان الفوري؟",
       op: {
@@ -191,17 +230,17 @@ const PREG = {
   ],
   "P2R": [
     {
-      es: "¿Qué tienes que hacer cuando no encuentras un artículo en la Bin?",
+      es: "&#191;Qu&eacute; tienes que hacer cuando no encuentras un art&iacute;culo en la Bin?",
       en: "What do you do when you can't find an item in the Bin?",
       ar: "ماذا تفعل عندما لا تجد عنصراً في الحاوية؟",
       op: {
-        es: ["Cogerla de otra Bin si está allí","Marcar faltante en pantalla","Avisar al Manager","Asegurarme que estoy en la Bin correcta y escanear uno a uno todos los artículos"],
+        es: ["Cogerla de otra Bin si est&aacute; all&iacute;","Marcar faltante en pantalla","Avisar al Manager","Asegurarme que estoy en la Bin correcta y escanear uno a uno todos los art&iacute;culos"],
         en: ["Take it from another Bin if it's there","Mark as missing on screen","Notify the Manager","Make sure I'm in the correct Bin and scan all items one by one"],
         ar: ["أخذها من حاوية أخرى إذا كانت هناك","تحديد العنصر المفقود على الشاشة","إخطار المدير","التأكد من أنني في الحاوية الصحيحة ومسح جميع العناصر واحدة تلو الأخرى"]
       }, c: 3
     },
     {
-      es: "¿Cómo gestiono un artículo que me ha quedado en la mano o se ha caído de la POD?",
+      es: "&#191;C&oacute;mo gestiono un art&iacute;culo que me ha quedado en la mano o se ha ca&iacute;do de la POD?",
       en: "How do I handle an item left in my hand or that fell from the POD?",
       ar: "كيف أتعامل مع عنصر بقي في يدي أو سقط من POD؟",
       op: {
@@ -211,31 +250,31 @@ const PREG = {
       }, c: 1
     },
     {
-      es: "¿Qué artículos van en el tote Amarillo de P2R?",
+      es: "&#191;Qu&eacute; art&iacute;culos van en el tote Amarillo de P2R?",
       en: "Which items go in the Yellow tote in P2R?",
       ar: "ما العناصر التي تذهب إلى التوت الأصفر في P2R؟",
       op: {
-        es: ["Todos los artículos que se me caen o no sé donde van","Todos los Damages","No lo sé, aviso al Manager","Solo los artículos que, después de intentar escanear todos los códigos de barras con los dos escáneres, revisar que el código de barras es el mismo que sale en pantalla o coinciden con la descripción"],
+        es: ["Todos los art&iacute;culos que se me caen o no s&eacute; donde van","Todos los Damages","No lo s&eacute;, aviso al Manager","Solo los art&iacute;culos que, despu&eacute;s de intentar escanear todos los c&oacute;digos de barras con los dos esc&aacute;neres, revisar que el c&oacute;digo de barras es el mismo que sale en pantalla o coinciden con la descripci&oacute;n"],
         en: ["All items that fall or I don't know where they go","All Damages","I don't know, I notify the Manager","Only items that, after trying to scan all barcodes with both scanners, checking that the barcode matches what's on screen or matches the description"],
         ar: ["جميع العناصر التي تسقط أو لا أعرف أين تذهب","جميع التالفة","لا أعرف، أخطر المدير","فقط العناصر التي بعد محاولة مسح جميع الرموز الشريطية بالماسحين والتحقق من تطابق الرمز مع الشاشة أو الوصف"]
       }, c: 3
     },
     {
-      es: "¿Qué es el proceso Pick to Rebin?",
+      es: "&#191;Qu&eacute; es el proceso Pick to Rebin?",
       en: "What is the Pick to Rebin process?",
       ar: "ما هي عملية Pick to Rebin؟",
       op: {
-        es: ["Recoger artículos y colocarlos directamente en cajas de envío","Recoger artículos del inventario y colocarlos en las chuts según el pedido para los packers","Recoger artículos y llevarlos a Problem Solve","Hablar con el Manager en la zona de Pick"],
+        es: ["Recoger art&iacute;culos y colocarlos directamente en cajas de env&iacute;o","Recoger art&iacute;culos del inventario y colocarlos en las chuts seg&uacute;n el pedido para los packers","Recoger art&iacute;culos y llevarlos a Problem Solve","Hablar con el Manager en la zona de Pick"],
         en: ["Pick items and place them directly in shipping boxes","Pick items from inventory and place them in the chuts according to the order for the packers","Pick items and take them to Problem Solve","Talk to the Manager in the Pick area"],
         ar: ["التقاط العناصر ووضعها مباشرة في صناديق الشحن","التقاط العناصر من المخزون ووضعها في الشوتات حسب الطلب للباكرز","التقاط العناصر وأخذها لحل المشكلات","التحدث مع المدير في منطقة الالتقاط"]
       }, c: 1
     },
     {
-      es: "¿Qué debes comprobar antes de colocar un artículo en la chut?",
+      es: "&#191;Qu&eacute; debes comprobar antes de colocar un art&iacute;culo en la chut?",
       en: "What must you check before placing an item in the chut?",
       ar: "ماذا يجب أن تتحقق قبل وضع عنصر في الشوت؟",
       op: {
-        es: ["Las unidades que me pide la pantalla","Que la chut tenga el color con el que estoy trabajando o bicolor para ubicar y empujar al mismo tiempo","Que esté escaneado correctamente","Todas las anteriores"],
+        es: ["Las unidades que me pide la pantalla","Que la chut tenga el color con el que estoy trabajando o bicolor para ubicar y empujar al mismo tiempo","Que est&eacute; escaneado correctamente","Todas las anteriores"],
         en: ["The units the screen asks for","That the chut has the color I'm working with or bicolor to place and push at the same time","That it has been scanned correctly","All of the above"],
         ar: ["الوحدات التي تطلبها الشاشة","أن يكون للشوت اللون الذي أعمل به أو ثنائي اللون للتحديد والدفع في نفس الوقت","أنه تم مسحه بشكل صحيح","جميع ما سبق"]
       }, c: 3
@@ -243,17 +282,17 @@ const PREG = {
   ],
   "PACK": [
     {
-      es: "¿Qué debes comprobar antes de cerrar una caja?",
+      es: "&#191;Qu&eacute; debes comprobar antes de cerrar una caja?",
       en: "What should you check before closing a box?",
       ar: "ماذا يجب أن تتحقق قبل إغلاق الصندوق؟",
       op: {
-        es: ["Que la caja sea del color correcto","Que el artículo, la cantidad y la etiqueta coinciden con el pedido","El peso de la caja","Avisas al Manager y paras el trabajo"],
+        es: ["Que la caja sea del color correcto","Que el art&iacute;culo, la cantidad y la etiqueta coinciden con el pedido","El peso de la caja","Avisas al Manager y paras el trabajo"],
         en: ["That the box is the right color","That the item, quantity and label match the order","The weight of the box","You notify the Manager and stop working"],
         ar: ["أن الصندوق بالألوان الصحيحة","أن العنصر والكمية والملصق يتطابقان مع الطلب","وزن الصندوق","تخطر المدير وتتوقف عن العمل"]
       }, c: 1
     },
     {
-      es: "¿Dónde se coloca la etiqueta de envío en la caja?",
+      es: "&#191;D&oacute;nde se coloca la etiqueta de env&iacute;o en la caja?",
       en: "Where is the shipping label placed on the box?",
       ar: "أين توضع ملصقة الشحن على الصندوق؟",
       op: {
@@ -263,31 +302,31 @@ const PREG = {
       }, c: 2
     },
     {
-      es: "¿Qué haces si el artículo no cabe bien en la caja asignada?",
+      es: "&#191;Qu&eacute; haces si el art&iacute;culo no cabe bien en la caja asignada?",
       en: "What do you do if the item doesn't fit well in the assigned box?",
       ar: "ماذا تفعل إذا لم يتناسب العنصر جيداً مع الصندوق المخصص؟",
       op: {
-        es: ["Lo doblas o comprimes para que entre","Lo dejas sin empaquetar","Usas la caja más grande sin avisar","Usas el tamaño correcto y si hay duda escalas a Problem Solve"],
+        es: ["Lo doblas o comprimes para que entre","Lo dejas sin empaquetar","Usas la caja m&aacute;s grande sin avisar","Usas el tama&ntilde;o correcto y si hay duda escalas a Problem Solve"],
         en: ["You fold or compress it to make it fit","You leave it unpackaged","You use the biggest box without informing","You use the correct size and if in doubt escalate to Problem Solve"],
         ar: ["تطويه أو تضغطه ليدخل","تتركه بدون تعبئة","تستخدم أكبر صندوق دون إخطار أحد","تستخدم الحجم الصحيح وإذا شككت تصعّد لحل المشكلات"]
       }, c: 3
     },
     {
-      es: "¿Cuándo está correctamente cerrada una caja en Pack?",
+      es: "&#191;Cu&aacute;ndo est&aacute; correctamente cerrada una caja en Pack?",
       en: "When is a box correctly closed in Pack?",
       ar: "متى يُعتبر الصندوق مغلقاً بشكل صحيح في Pack؟",
       op: {
-        es: ["Cuando el artículo no se mueve al agitarla","Cuando tiene dunnage suficiente, está sellada con cinta water y la etiqueta es visible","Cuando pesa menos de 5kg","Avisas al Manager y paras el trabajo"],
+        es: ["Cuando el art&iacute;culo no se mueve al agitarla","Cuando tiene dunnage suficiente, est&aacute; sellada con cinta water y la etiqueta es visible","Cuando pesa menos de 5kg","Avisas al Manager y paras el trabajo"],
         en: ["When the item doesn't move when shaken","When it has enough dunnage, is sealed with water tape and the label is visible","When it weighs less than 5kg","You notify the Manager and stop working"],
         ar: ["عندما لا يتحرك العنصر عند الاهتزاز","عندما يحتوي على دنّاج كافٍ ومختوم بشريط الماء والملصق مرئي","عندما يزن أقل من 5 كيلوغرام","تخطر المدير وتتوقف عن العمل"]
       }, c: 1
     },
     {
-      es: "¿Qué haces si detectas un artículo dañado en Pack?",
+      es: "&#191;Qu&eacute; haces si detectas un art&iacute;culo da&ntilde;ado en Pack?",
       en: "What do you do if you detect a damaged item in Pack?",
       ar: "ماذا تفعل إذا اكتشفت عنصراً تالفاً في Pack؟",
       op: {
-        es: ["Lo empaquetas igual para no parar la línea","Lo devuelves al tote sin hacer nada","Lo procesas como Damage y lo diriges al tote rojo","Avisas al Manager y paras el trabajo"],
+        es: ["Lo empaquetas igual para no parar la l&iacute;nea","Lo devuelves al tote sin hacer nada","Lo procesas como Damage y lo diriges al tote rojo","Avisas al Manager y paras el trabajo"],
         en: ["You pack it anyway to not stop the line","You return it to the tote without doing anything","You process it as Damage and direct it to the red tote","You notify the Manager and stop working"],
         ar: ["تعبئته على أي حال حتى لا تتوقف الخط","إعادته للتوت دون فعل أي شيء","معالجته كتلف وتوجيهه للتوت الأحمر","تخطر المدير وتتوقف عن العمل"]
       }, c: 2
@@ -295,51 +334,51 @@ const PREG = {
   ],
   "STOW": [
     {
-      es: "¿Qué es el Bin Etiquette en Stow?",
+      es: "&#191;Qu&eacute; es el Bin Etiquette en Stow?",
       en: "What is Bin Etiquette in Stow?",
       ar: "ما هو آداب الحاوية في Stow؟",
       op: {
-        es: ["El código de barras de la ubicación","No apilar artículos diferentes ni sin base estable, no obstruir un artículo con otro, líquidos con el tapón hacia dentro y libros con lomo y título hacia fuera","La etiqueta del artículo","Avisas al Manager y paras el trabajo"],
+        es: ["El c&oacute;digo de barras de la ubicaci&oacute;n","No apilar art&iacute;culos diferentes ni sin base estable, no obstruir un art&iacute;culo con otro, l&iacute;quidos con el tap&oacute;n hacia dentro y libros con lomo y t&iacute;tulo hacia fuera","La etiqueta del art&iacute;culo","Avisas al Manager y paras el trabajo"],
         en: ["The barcode of the location","Don't stack different or unstable items, don't block one item with another, liquids with cap inward and books with spine and title facing out","The item label","You notify the Manager and stop working"],
         ar: ["الرمز الشريطي للموقع","لا تكدس عناصر مختلفة أو غير مستقرة، ولا تعيق عنصراً بآخر، السوائل بالغطاء للداخل والكتب بالعمود الفقري والعنوان للخارج","ملصق العنصر","تخطر المدير وتتوقف عن العمل"]
       }, c: 1
     },
     {
-      es: "¿Qué significa que la luz de una bin se enciende en color magenta?",
+      es: "&#191;Qu&eacute; significa que la luz de una bin se enciende en color magenta?",
       en: "What does it mean when a bin light turns magenta?",
       ar: "ماذا يعني أن يضيء ضوء الحاوية باللون الأرجواني؟",
       op: {
-        es: ["Que la bin está llena","Que el artículo es frágil","Filter violation — no puedes ubicar el artículo en esa bin","Avisas al Manager y paras el trabajo"],
+        es: ["Que la bin est&aacute; llena","Que el art&iacute;culo es fr&aacute;gil","Filter violation &mdash; no puedes ubicar el art&iacute;culo en esa bin","Avisas al Manager y paras el trabajo"],
         en: ["The bin is full","The item is fragile","Filter violation — you cannot place the item in that bin","You notify the Manager and stop working"],
         ar: ["الحاوية ممتلئة","العنصر هش","انتهاك الفلتر — لا يمكنك وضع العنصر في تلك الحاوية","تخطر المدير وتتوقف عن العمل"]
       }, c: 2
     },
     {
-      es: "¿Qué es un Multiple Event en Stow?",
+      es: "&#191;Qu&eacute; es un Multiple Event en Stow?",
       en: "What is a Multiple Event in Stow?",
       ar: "ما هو الحدث المتعدد في Stow؟",
       op: {
-        es: ["Cuando guardas varios artículos a la vez","Cuando el AA toca una bin diferente a donde colocó el artículo y el sistema pierde la ubicación exacta","Cuando hay dos artículos iguales en la misma bin","Avisas al Manager y paras el trabajo"],
+        es: ["Cuando guardas varios art&iacute;culos a la vez","Cuando el AA toca una bin diferente a donde coloc&oacute; el art&iacute;culo y el sistema pierde la ubicaci&oacute;n exacta","Cuando hay dos art&iacute;culos iguales en la misma bin","Avisas al Manager y paras el trabajo"],
         en: ["When you store several items at once","When the AA touches a different bin from where they placed the item and the system loses the exact location","When there are two identical items in the same bin","You notify the Manager and stop working"],
         ar: ["عندما تخزن عدة عناصر دفعة واحدة","عندما يلمس AA حاوية مختلفة عن حيث وضع العنصر ويفقد النظام الموقع الدقيق","عندما يوجد عنصران متطابقان في نفس الحاوية","تخطر المدير وتتوقف عن العمل"]
       }, c: 1
     },
     {
-      es: "¿Qué debes hacer para evitar un Multiple Event?",
+      es: "&#191;Qu&eacute; debes hacer para evitar un Multiple Event?",
       en: "What should you do to avoid a Multiple Event?",
       ar: "ماذا يجب أن تفعل لتجنب الحدث المتعدد؟",
       op: {
-        es: ["Escanear rápido sin mirar","Tocar solo la bin donde vas a colocar el artículo, sin tocar otras bins","Colocar el artículo en cualquier bin libre","Avisas al Manager y paras el trabajo"],
+        es: ["Escanear r&aacute;pido sin mirar","Tocar solo la bin donde vas a colocar el art&iacute;culo, sin tocar otras bins","Colocar el art&iacute;culo en cualquier bin libre","Avisas al Manager y paras el trabajo"],
         en: ["Scan quickly without looking","Only touch the bin where you are going to place the item, without touching other bins","Place the item in any free bin","You notify the Manager and stop working"],
         ar: ["المسح بسرعة دون النظر","لمس الحاوية التي ستضع فيها العنصر فقط، دون لمس حاويات أخرى","وضع العنصر في أي حاوية حرة","تخطر المدير وتتوقف عن العمل"]
       }, c: 1
     },
     {
-      es: "Según el Bin Etiquette, ¿cómo deben colocarse los líquidos en la bin?",
+      es: "Seg&uacute;n el Bin Etiquette, &#191;c&oacute;mo deben colocarse los l&iacute;quidos en la bin?",
       en: "According to Bin Etiquette, how should liquids be placed in the bin?",
       ar: "وفقاً لآداب الحاوية، كيف يجب وضع السوائل في الحاوية؟",
       op: {
-        es: ["Tumbados para aprovechar espacio","Apilados unos encima de otros","Con el tapón hacia dentro","Avisas al Manager y paras el trabajo"],
+        es: ["Tumbados para aprovechar espacio","Apilados unos encima de otros","Con el tap&oacute;n hacia dentro","Avisas al Manager y paras el trabajo"],
         en: ["Lying down to save space","Stacked on top of each other","With the cap facing inward","You notify the Manager and stop working"],
         ar: ["مستلقية لتوفير المساحة","مكدسة فوق بعضها","مع الغطاء للداخل","تخطر المدير وتتوقف عن العمل"]
       }, c: 2
@@ -347,37 +386,37 @@ const PREG = {
   ],
   "SAFETY": [
     {
-      es: "¿Qué debes hacer si ves un derrame en el suelo?",
+      es: "&#191;Qu&eacute; debes hacer si ves un derrame en el suelo?",
       en: "What should you do if you see a spill on the floor?",
       ar: "ماذا تفعل إذا رأيت انسكاباً على الأرض؟",
       op: {
-        es: ["Lo ignoras y sigues trabajando","Lo limpias tú solo sin avisar","Lo señalizas con los conos y reportas al Manager","No aviso al Manager y sigo trabajando"],
+        es: ["Lo ignoras y sigues trabajando","Lo limpias t&uacute; solo sin avisar","Lo se&ntilde;alizas con los conos y reportas al Manager","No aviso al Manager y sigo trabajando"],
         en: ["Ignore it and keep working","Clean it yourself without informing anyone","Mark it with cones and report to the Manager","I don't notify the Manager and keep working"],
         ar: ["تتجاهله وتكمل العمل","تنظفه بنفسك دون إخطار أحد","تضع المخاريط وتبلغ المدير","لا أخطر المدير وأكمل العمل"]
       }, c: 2
     },
     {
-      es: "¿Cómo debes levantar una caja pesada correctamente?",
+      es: "&#191;C&oacute;mo debes levantar una caja pesada correctamente?",
       en: "How should you correctly lift a heavy box?",
       ar: "كيف يجب رفع صندوق ثقيل بشكل صحيح؟",
       op: {
-        es: ["Con la espalda doblada y los brazos estirados","Doblando las rodillas, espalda recta y pegando la caja al cuerpo","Con un solo brazo para ir más rápido","Aviso al Manager para que me ayude"],
+        es: ["Con la espalda doblada y los brazos estirados","Doblando las rodillas, espalda recta y pegando la caja al cuerpo","Con un solo brazo para ir m&aacute;s r&aacute;pido","Aviso al Manager para que me ayude"],
         en: ["With your back bent and arms stretched","Bending your knees, straight back and keeping the box close to your body","With one arm to go faster","I notify the Manager to help me"],
         ar: ["بظهر منحنٍ وذراعين ممتدتين","ثني الركبتين وظهر مستقيم والصندوق قريب من الجسم","بذراع واحدة للعمل بشكل أسرع","أخطر المدير ليساعدني"]
       }, c: 1
     },
     {
-      es: "¿Qué significan las líneas azules en el suelo?",
+      es: "&#191;Qu&eacute; significan las l&iacute;neas azules en el suelo?",
       en: "What do the blue lines on the floor mean?",
       ar: "ماذا تعني الخطوط الزرقاء على الأرض؟",
       op: {
-        es: ["Zona por donde puedo pasar","Zona por donde pasan las máquinas eléctricas","Zona de paso de los Managers","Carril peatonal donde tienen prioridad de paso las cargas manuales con más peso"],
+        es: ["Zona por donde puedo pasar","Zona por donde pasan las m&aacute;quinas el&eacute;ctricas","Zona de paso de los Managers","Carril peatonal donde tienen prioridad de paso las cargas manuales con m&aacute;s peso"],
         en: ["Area where I can walk","Area where electric machines pass","Manager walkway","Pedestrian lane where heavier manual loads have right of way"],
         ar: ["منطقة يمكنني المشي فيها","منطقة مرور الآلات الكهربائية","ممر المديرين","ممر المشاة حيث تتمتع الأحمال اليدوية الأثقل بحق المرور"]
       }, c: 3
     },
     {
-      es: "¿Qué debes hacer si sufres una lesión en el trabajo, por pequeña que sea?",
+      es: "&#191;Qu&eacute; debes hacer si sufres una lesi&oacute;n en el trabajo, por peque&ntilde;a que sea?",
       en: "What should you do if you suffer a work injury, no matter how small?",
       ar: "ماذا تفعل إذا تعرضت لإصابة في العمل مهما كانت صغيرة؟",
       op: {
@@ -387,11 +426,11 @@ const PREG = {
       }, c: 2
     },
     {
-      es: "¿Qué haces en caso de evacuación de emergencia?",
+      es: "&#191;Qu&eacute; haces en caso de evacuaci&oacute;n de emergencia?",
       en: "What do you do in case of emergency evacuation?",
       ar: "ماذا تفعل في حالة الإخلاء الطارئ؟",
       op: {
-        es: ["Recoges tus cosas y luego sales","Sigues trabajando si no ves humo","Paras inmediatamente, dejas todo y vas a tu punto de encuentro","No aviso al Manager y voy a buscar a mi amigo para escondernos en el baño"],
+        es: ["Recoges tus cosas y luego sales","Sigues trabajando si no ves humo","Paras inmediatamente, dejas todo y vas a tu punto de encuentro","No aviso al Manager y voy a buscar a mi amigo para escondernos en el ba&ntilde;o"],
         en: ["Collect your things and then leave","Keep working if you don't see smoke","Stop immediately, leave everything and go to your meeting point","I don't notify the Manager and go find my friend to hide in the bathroom"],
         ar: ["تجمع أغراضك ثم تخرج","تكمل العمل إذا لم تر دخاناً","تتوقف فوراً وتترك كل شيء وتذهب لنقطة التجمع","لا أخطر المدير وأذهب لإيجاد صديقي للاختباء في الحمام"]
       }, c: 2
@@ -399,51 +438,51 @@ const PREG = {
   ],
   "CALIDAD": [
     {
-      es: "¿Qué es una Concession en Amazon?",
+      es: "&#191;Qu&eacute; es una Concession en Amazon?",
       en: "What is a Concession in Amazon?",
       ar: "ما هي التنازل في أمازون؟",
       op: {
-        es: ["Un producto roto","Cualquier incidencia que recibe el cliente en su paquete con lo que había pedido","Un empleado nuevo","Es el título de un libro: 'El Señor de los Paquetes: El retorno del Manager'"],
+        es: ["Un producto roto","Cualquier incidencia que recibe el cliente en su paquete con lo que hab&iacute;a pedido","Un empleado nuevo","Es el t&iacute;tulo de un libro: 'El Se&ntilde;or de los Paquetes: El retorno del Manager'"],
         en: ["A broken product","Any incident the customer receives in their package compared to what they ordered","A new employee","It's the title of a book: 'The Lord of the Packages: The Return of the Manager'"],
         ar: ["منتج مكسور","أي حادثة يتلقاها العميل في طرده مقارنة بما طلبه","موظف جديد","إنه عنوان كتاب: 'سيد الخواتم: عودة المدير'"]
       }, c: 1
     },
     {
-      es: "¿Qué haces si detectas un artículo que no coincide con el pedido?",
+      es: "&#191;Qu&eacute; haces si detectas un art&iacute;culo que no coincide con el pedido?",
       en: "What do you do if you detect an item that doesn't match the order?",
       ar: "ماذا تفعل إذا اكتشفت عنصراً لا يتطابق مع الطلب؟",
       op: {
-        es: ["Lo empaquetas igual para no parar la línea","Lo ignoras y sigues","Reviso que en la Chut no esté, reviso el tote azul, dejo el artículo que no es en la Chut y en pantalla selecciono Problem y marco faltante","Busco al Manager y paro de trabajar"],
+        es: ["Lo empaquetas igual para no parar la l&iacute;nea","Lo ignoras y sigues","Reviso que en la Chut no est&eacute;, reviso el tote azul, dejo el art&iacute;culo que no es en la Chut y en pantalla selecciono Problem y marco faltante","Busco al Manager y paro de trabajar"],
         en: ["Pack it anyway to not stop the line","Ignore it and continue","Check it's not in the Chut, check the blue tote, leave the wrong item in the Chut and on screen select Problem and mark as missing","Look for the Manager and stop working"],
         ar: ["تعبئته على أي حال حتى لا تتوقف الخط","تتجاهله وتكمل","أتحقق من أنه ليس في الشوت وأتفقد التوت الأزرق وأترك العنصر غير الصحيح في الشوت وعلى الشاشة أختار Problem وأحدد المفقود","أبحث عن المدير وأتوقف عن العمل"]
       }, c: 2
     },
     {
-      es: "¿Qué es un Ship Fail?",
+      es: "&#191;Qu&eacute; es un Ship Fail?",
       en: "What is a Ship Fail?",
       ar: "ما هو فشل الشحن؟",
       op: {
-        es: ["Un paquete que se ha perdido en el almacén","Un paquete que no ha podido ser enviado al cliente en el tiempo establecido","Un paquete dañado en tránsito","Un Manager se ha perdido y no lo encontramos"],
+        es: ["Un paquete que se ha perdido en el almac&eacute;n","Un paquete que no ha podido ser enviado al cliente en el tiempo establecido","Un paquete da&ntilde;ado en tr&aacute;nsito","Un Manager se ha perdido y no lo encontramos"],
         en: ["A package that got lost in the warehouse","A package that could not be sent to the customer within the established time","A package damaged in transit","A Manager got lost and we can't find them"],
         ar: ["طرد ضاع في المستودع","طرد لم يمكن إرساله للعميل في الوقت المحدد","طرد تالف في العبور","مدير ضاع ولم نجده"]
       }, c: 1
     },
     {
-      es: "¿Qué significa CPT?",
+      es: "&#191;Qu&eacute; significa CPT?",
       en: "What does CPT mean?",
       ar: "ماذا يعني CPT؟",
       op: {
-        es: ["Un tipo de producto","Un código de empleado","La hora límite para que los paquetes salgan del almacén","No aviso al Manager y sigo trabajando"],
+        es: ["Un tipo de producto","Un c&oacute;digo de empleado","La hora l&iacute;mite para que los paquetes salgan del almac&eacute;n","No aviso al Manager y sigo trabajando"],
         en: ["A type of product","An employee code","The deadline for packages to leave the warehouse","I don't notify the Manager and keep working"],
         ar: ["نوع من المنتجات","رمز موظف","الموعد النهائي لخروج الطرود من المستودع","لا أخطر المدير وأكمل العمل"]
       }, c: 2
     },
     {
-      es: "¿Qué es un PEI (Pick Error Indicator) y cómo lo evitas?",
+      es: "&#191;Qu&eacute; es un PEI (Pick Error Indicator) y c&oacute;mo lo evitas?",
       en: "What is a PEI (Pick Error Indicator) and how do you avoid it?",
       ar: "ما هو PEI (مؤشر خطأ الالتقاط) وكيف تتجنبه؟",
       op: {
-        es: ["Un error del sistema que no podemos controlar","No sobrepasar el gálibo del tote, colocar artículos pequeños y poco pesados en los laterales o debajo de los pesados, hacer siempre One Piece Flow y gestionar bien el cambio de tote","Se cancela el pedido automáticamente","Un Manager ha cometido un error"],
+        es: ["Un error del sistema que no podemos controlar","No sobrepasar el g&aacute;libo del tote, colocar art&iacute;culos peque&ntilde;os y poco pesados en los laterales o debajo de los pesados, hacer siempre One Piece Flow y gestionar bien el cambio de tote","Se cancela el pedido autom&aacute;ticamente","Un Manager ha cometido un error"],
         en: ["A system error we can't control","Don't exceed the tote gauge, place small and light items on the sides or under heavy ones, always do One Piece Flow and manage tote changes correctly","The order is automatically cancelled","A Manager made a mistake"],
         ar: ["خطأ في النظام لا يمكننا التحكم فيه","لا تتجاوز مقياس التوت وضع العناصر الصغيرة والخفيفة على الجانبين أو تحت الثقيلة وافعل دائماً One Piece Flow وأدر تغييرات التوت بشكل صحيح","يتم إلغاء الطلب تلقائياً","ارتكب مدير خطأً"]
       }, c: 1
@@ -451,51 +490,51 @@ const PREG = {
   ],
   "PROCESOS": [
     {
-      es: "¿Qué es un Andon y para qué sirve?",
+      es: "&#191;Qu&eacute; es un Andon y para qu&eacute; sirve?",
       en: "What is an Andon and what is it used for?",
       ar: "ما هو Andon وما هو استخدامه؟",
       op: {
-        es: ["Un tipo de caja de embalaje","Un sistema de alerta que permite parar o pedir ayuda cuando hay un problema en el proceso","Un escáner de mano","El nombre del Manager de turno"],
+        es: ["Un tipo de caja de embalaje","Un sistema de alerta que permite parar o pedir ayuda cuando hay un problema en el proceso","Un esc&aacute;ner de mano","El nombre del Manager de turno"],
         en: ["A type of packaging box","An alert system that allows you to stop or ask for help when there is a problem in the process","A handheld scanner","The name of the shift Manager"],
         ar: ["نوع من صناديق التغليف","نظام تنبيه يتيح التوقف أو طلب المساعدة عند وجود مشكلة في العملية","ماسح يدوي","اسم مدير الوردية"]
       }, c: 1
     },
     {
-      es: "¿Qué significa CPT y por qué es importante?",
+      es: "&#191;Qu&eacute; significa CPT y por qu&eacute; es importante?",
       en: "What does CPT mean and why is it important?",
       ar: "ماذا يعني CPT ولماذا هو مهم؟",
       op: {
-        es: ["Código de Proceso de Trabajo — define cómo se hace cada tarea","Cut-off Time — hora límite para que los paquetes salgan del almacén y lleguen al cliente a tiempo","Central Processing Team — el equipo que controla la producción","Clasificación de Producto por Tipo"],
+        es: ["C&oacute;digo de Proceso de Trabajo &mdash; define c&oacute;mo se hace cada tarea","Cut-off Time &mdash; hora l&iacute;mite para que los paquetes salgan del almac&eacute;n y lleguen al cliente a tiempo","Central Processing Team &mdash; el equipo que controla la producci&oacute;n","Clasificaci&oacute;n de Producto por Tipo"],
         en: ["Code of Work Process — defines how each task is done","Cut-off Time — the deadline for packages to leave the warehouse and reach the customer on time","Central Processing Team — the team that controls production","Product Classification by Type"],
         ar: ["كود عملية العمل — يحدد كيفية تنفيذ كل مهمة","Cut-off Time — الموعد النهائي لخروج الطرود من المستودع","فريق المعالجة المركزية — الفريق الذي يتحكم في الإنتاج","تصنيف المنتج حسب النوع"]
       }, c: 1
     },
     {
-      es: "¿Qué es Problem Solve y cuándo debes usarlo?",
+      es: "&#191;Qu&eacute; es Problem Solve y cu&aacute;ndo debes usarlo?",
       en: "What is Problem Solve and when should you use it?",
       ar: "ما هو Problem Solve ومتى يجب استخدامه؟",
       op: {
-        es: ["Una zona donde se gestionan artículos que no se pueden procesar con normalidad: sin código de barras, dañados, o que el sistema no reconoce","La sala de descanso","El despacho del Manager","Una aplicación de móvil"],
+        es: ["Una zona donde se gestionan art&iacute;culos que no se pueden procesar con normalidad: sin c&oacute;digo de barras, da&ntilde;ados, o que el sistema no reconoce","La sala de descanso","El despacho del Manager","Una aplicaci&oacute;n de m&oacute;vil"],
         en: ["An area where items that cannot be processed normally are handled: no barcode, damaged, or not recognized by the system","The break room","The Manager's office","A mobile application"],
         ar: ["منطقة تُعالج فيها العناصر التي لا يمكن معالجتها بشكل طبيعي: بدون باركود أو تالفة أو غير معروفة للنظام","غرفة الاستراحة","مكتب المدير","تطبيق جوال"]
       }, c: 0
     },
     {
-      es: "¿Qué es una Concession y cuál es su impacto en la operación?",
+      es: "&#191;Qu&eacute; es una Concession y cu&aacute;l es su impacto en la operaci&oacute;n?",
       en: "What is a Concession and what is its operational impact?",
       ar: "ما هي الـ Concession وما تأثيرها على العملية؟",
       op: {
-        es: ["Un premio para el empleado del mes","Cualquier incidencia que recibe el cliente en su paquete respecto a lo que pidió — afecta la experiencia del cliente y los indicadores del almacén","Una pausa adicional durante el turno","El nombre de un producto especial"],
+        es: ["Un premio para el empleado del mes","Cualquier incidencia que recibe el cliente en su paquete respecto a lo que pidi&oacute; &mdash; afecta la experiencia del cliente y los indicadores del almac&eacute;n","Una pausa adicional durante el turno","El nombre de un producto especial"],
         en: ["A prize for the employee of the month","Any incident the customer receives in their package compared to what they ordered — affects customer experience and warehouse metrics","An extra break during the shift","The name of a special product"],
         ar: ["جائزة موظف الشهر","أي حادثة يتلقاها العميل في طرده مقارنة بما طلبه — تؤثر على تجربة العميل ومؤشرات المستودع","استراحة إضافية خلال الوردية","اسم منتج خاص"]
       }, c: 1
     },
     {
-      es: "¿Qué debes hacer si detectas un problema de calidad o seguridad que no puedes resolver tú solo?",
+      es: "&#191;Qu&eacute; debes hacer si detectas un problema de calidad o seguridad que no puedes resolver t&uacute; solo?",
       en: "What should you do if you detect a quality or safety problem you cannot solve on your own?",
       ar: "ماذا يجب أن تفعل إذا اكتشفت مشكلة جودة أو أمان لا يمكنك حلها بمفردك؟",
       op: {
-        es: ["Ignorarlo y continuar trabajando para no bajar la productividad","Intentar arreglarlo tú mismo aunque no sepas cómo","Crear un Andon, comunicarlo a tu Manager y no continuar hasta recibir instrucciones","Esperar a que otro compañero lo detecte"],
+        es: ["Ignorarlo y continuar trabajando para no bajar la productividad","Intentar arreglarlo t&uacute; mismo aunque no sepas c&oacute;mo","Crear un Andon, comunicarlo a tu Manager y no continuar hasta recibir instrucciones","Esperar a que otro compa&ntilde;ero lo detecte"],
         en: ["Ignore it and keep working to avoid lowering productivity","Try to fix it yourself even if you do not know how","Create an Andon, communicate it to your Manager and do not continue until you receive instructions","Wait for another colleague to detect it"],
         ar: ["تجاهله والاستمرار في العمل لتجنب خفض الإنتاجية","حاول إصلاحه بنفسك حتى لو لم تعرف كيف","أنشئ Andon وأخبر مديرك ولا تكمل حتى تتلقى تعليمات","انتظر حتى يكتشفه زميل آخر"]
       }, c: 2
@@ -503,98 +542,217 @@ const PREG = {
   ]
 };
 
-
-
 const CAT_NAMES={P2T:"Pick to Tote",P2R:"Pick to Rebin",PACK:"Packing",STOW:"Stow",SAFETY:"Safety",CALIDAD:"Calidad",PROCESOS:"Procesos"};
 const PTS_HUECO=50;
-let pregActual=null,catActual=null,langActual='es',opcionesOrden=[];
+let pregActual=null, catActual=null, langActual='es', opcionesOrden=[];
+let badgeActual = null;
 
-let _cache=[];
-function _syncFirebase(){
-  if(window._fbOnValue){ window._fbOnValue(arr=>{ _cache=arr; }); }
-  else { setTimeout(_syncFirebase,300); }
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
 }
-setTimeout(_syncFirebase,500);
 
-function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');}
+// ── LOGIN VERIFICATION ──────────────────────────────────────────
+function verificarBadge(){
+  const input = document.getElementById('badge-input');
+  const login = input.value.trim().toLowerCase().replace(/\s/g,'');
+  const alerta = document.getElementById('badge-alert');
+  const btn = document.getElementById('badge-btn');
 
+  if(!login || login.length < 2){
+    mostrarAlerta(alerta, 'error', '&#9888; Introduce tu login de Amazon.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Verificando...';
+  alerta.style.display = 'none';
+
+  window._fbGetParticipante(login).then(data => {
+    btn.disabled = false;
+    btn.innerHTML = 'Continuar';
+
+    if(!data){
+      mostrarAlerta(alerta, 'error', '&#10060; Login no registrado. Pide al manager que escanee tu badge primero.');
+      return;
+    }
+
+    if(!data.activo){
+      mostrarAlerta(alerta, 'warn', '&#9888; Tu badge no ha sido activado todav&iacute;a. Pide al manager que escanee tu badge.');
+      return;
+    }
+
+    if(data.participoEnPregunta){
+      mostrarAlerta(alerta, 'warn', '&#9203; Ya has participado. &iexcl;Suerte en el sorteo final!');
+      return;
+    }
+
+    // OK — puede jugar
+    badgeActual = login;
+    mostrarAlerta(alerta, 'ok', '&#10003; Bienvenido/a <b>' + login + '</b>! Elige tu categor&iacute;a.');
+    setTimeout(() => { show('s-cat'); }, 1000);
+
+  }).catch(err => {
+    btn.disabled = false;
+    btn.innerHTML = 'Continuar';
+    mostrarAlerta(alerta, 'error', '&#9888; Error de conexi&oacute;n. Comprueba el WiFi e int&eacute;ntalo de nuevo.');
+    console.error('Firebase error:', err);
+  });
+}
+
+function mostrarAlerta(el, tipo, msg){
+  el.className = 'alert-box ' + tipo;
+  el.innerHTML = msg;
+  el.style.display = 'block';
+}
+
+// Permitir Enter en el campo de badge
+document.getElementById('badge-input').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') verificarBadge();
+});
+
+// ── CATEGORIA ───────────────────────────────────────────────────
 function elegirCat(cat){
-  catActual=cat;
-  const pool=PREG[cat];
-  pregActual=pool[Math.floor(Math.random()*pool.length)];
-  opcionesOrden=[];
-  document.getElementById('preg-badge').textContent=CAT_NAMES[cat];
+  catActual = cat;
+  const pool = PREG[cat];
+  pregActual = pool[Math.floor(Math.random() * pool.length)];
+  opcionesOrden = [];
+  document.getElementById('preg-badge').textContent = CAT_NAMES[cat];
   document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('act'));
-  document.getElementById('btn-'+langActual).classList.add('act');
+  document.getElementById('btn-' + langActual).classList.add('act');
   setLang(langActual);
   show('s-preg');
 }
 
+// ── PREGUNTA ────────────────────────────────────────────────────
 function setLang(lang){
-  langActual=lang;
+  langActual = lang;
   document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('act'));
-  document.getElementById('btn-'+lang).classList.add('act');
+  document.getElementById('btn-' + lang).classList.add('act');
   if(!pregActual) return;
-  document.getElementById('preg-txt').textContent=pregActual[lang];
-  const cont=document.getElementById('preg-ops');
-  if(opcionesOrden.length===0){
-    opcionesOrden=pregActual.op.es.map((_,i)=>i);
-    for(let i=opcionesOrden.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opcionesOrden[i],opcionesOrden[j]]=[opcionesOrden[j],opcionesOrden[i]];}
+  document.getElementById('preg-txt').innerHTML = pregActual[lang];
+  const cont = document.getElementById('preg-ops');
+  if(opcionesOrden.length === 0){
+    opcionesOrden = pregActual.op.es.map((_,i)=>i);
+    for(let i=opcionesOrden.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [opcionesOrden[i],opcionesOrden[j]]=[opcionesOrden[j],opcionesOrden[i]];
+    }
   }
-  const prevStates={};
-  cont.querySelectorAll('.op').forEach((b,idx)=>{prevStates[idx]={ok:b.classList.contains('ok'),no:b.classList.contains('no'),disabled:b.disabled};});
-  cont.innerHTML='';
-  opcionesOrden.forEach((oi,idx)=>{
-    const b=document.createElement('button');b.className='op';
-    b.textContent=pregActual.op[lang][oi];
-    if(prevStates[idx]){if(prevStates[idx].ok)b.classList.add('ok');if(prevStates[idx].no)b.classList.add('no');if(prevStates[idx].disabled)b.disabled=true;}
-    b.onclick=()=>responder(b,oi===pregActual.c);
+  const prevStates = {};
+  cont.querySelectorAll('.op').forEach((b,idx)=>{
+    prevStates[idx]={ok:b.classList.contains('ok'),no:b.classList.contains('no'),disabled:b.disabled};
+  });
+  cont.innerHTML = '';
+  opcionesOrden.forEach((oi, idx)=>{
+    const b = document.createElement('button');
+    b.className = 'op';
+    b.innerHTML = pregActual.op[lang][oi];
+    if(prevStates[idx]){
+      if(prevStates[idx].ok) b.classList.add('ok');
+      if(prevStates[idx].no) b.classList.add('no');
+      if(prevStates[idx].disabled) b.disabled = true;
+    }
+    b.onclick = ()=>responder(b, oi===pregActual.c);
     cont.appendChild(b);
   });
 }
 
-function responder(btn,correcta){
+// ── RESPUESTA ───────────────────────────────────────────────────
+function responder(btn, correcta){
   document.querySelectorAll('#preg-ops .op').forEach(b=>b.disabled=true);
-  if(correcta){btn.classList.add('ok');setTimeout(()=>resultado('win'),650);}
-  else{
+  if(correcta){
+    btn.classList.add('ok');
+    setTimeout(()=>resultado('win'), 650);
+  } else {
     btn.classList.add('no');
-    const ops=[...document.querySelectorAll('#preg-ops .op')];
-    opcionesOrden.forEach((oi,idx)=>{if(oi===pregActual.c)ops[idx].classList.add('ok');});
-    setTimeout(()=>resultado('snack'),900);
+    const ops = [...document.querySelectorAll('#preg-ops .op')];
+    opcionesOrden.forEach((oi,idx)=>{ if(oi===pregActual.c) ops[idx].classList.add('ok'); });
+    setTimeout(()=>resultado('snack'), 900);
   }
 }
 
+// ── RESULTADO + FIREBASE ─────────────────────────────────────────
 function resultado(tipo){
-  const now=new Date();
-  const hora=now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-  const totalPts=tipo==='win'?PTS_HUECO:0;
-  const entrada={badge:'ANONIMO',categoria:catActual,ptsTiro:PTS_HUECO,acerto:tipo==='win',totalPts:totalPts,hora:hora,ts:now.getTime(),satelite:'CENTRO'};
-  if(window._fbPush) window._fbPush(entrada); else setTimeout(()=>window._fbPush&&window._fbPush(entrada),800);
-  const ico=document.getElementById('res-ico'),tit=document.getElementById('res-tit'),
-        msg=document.getElementById('res-msg'),pr=document.getElementById('res-premio');
-  tit.className='restit '+(tipo==='win'?'win':'snack');
+  const now = new Date();
+  const hora = now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  const totalPts = tipo==='win' ? PTS_HUECO : 0;
+
+  // 1. Guardar jugada en /registros
+  const entrada = {
+    badge: badgeActual,
+    categoria: catActual,
+    ptsTiro: PTS_HUECO,
+    acerto: tipo==='win',
+    totalPts: totalPts,
+    hora: hora,
+    ts: now.getTime(),
+    satelite: 'CENTRO'
+  };
+  if(window._fbPush) window._fbPush(entrada);
+
+  // 2. Actualizar participante — marcar como jugado
+  if(window._fbUpdateParticipante && badgeActual){
+    window._fbUpdateParticipante(badgeActual, {
+      participoEnPregunta: true,
+      acerto: tipo==='win',
+      totalPts: totalPts,
+      categoria: catActual,
+      satelite: 'CENTRO',
+      horaJuego: hora,
+      tsJuego: now.getTime()
+    });
+  }
+
+  const ico = document.getElementById('res-ico');
+  const tit = document.getElementById('res-tit');
+  const msg = document.getElementById('res-msg');
+  const pr  = document.getElementById('res-premio');
+
+  tit.className = 'restit ' + (tipo==='win' ? 'win' : 'snack');
+
   if(tipo==='win'){
     confeti();
-    ico.textContent='&#127881;';tit.textContent='Al sorteo final!';
-    msg.innerHTML='Punteria y conocimiento! Sumaste <b>'+totalPts+' puntos</b>.';
-    pr.innerHTML='&#127903; ENTRAS EN EL SORTEO FINAL';
-  }else{
-    ico.textContent='&#127852;';tit.textContent='Gracias por jugar!';
-    msg.innerHTML='Por participar te llevas un detalle. Sigue intentandolo!';
-    pr.innerHTML='&#127873; SNACK / DETALLE POR PARTICIPAR';
+    ico.innerHTML = '&#127881;';
+    tit.textContent = 'Al sorteo final!';
+    msg.innerHTML = 'Punter&iacute;a y conocimiento! Sumaste <b>' + totalPts + ' puntos</b>.';
+    pr.innerHTML = '&#127903; ENTRAS EN EL SORTEO FINAL';
+  } else {
+    ico.innerHTML = '&#127852;';
+    tit.textContent = 'Gracias por jugar!';
+    msg.innerHTML = 'Por participar te llevas un detalle. &iexcl;Sigue intent&aacute;ndolo!';
+    pr.innerHTML = '&#127873; SNACK / DETALLE POR PARTICIPAR';
   }
   show('s-res');
 }
 
-function reiniciar(){pregActual=null;catActual=null;opcionesOrden=[];langActual='es';show('s-cat');}
+// ── REINICIAR ────────────────────────────────────────────────────
+function reiniciar(){
+  pregActual = null;
+  catActual = null;
+  opcionesOrden = [];
+  langActual = 'es';
+  badgeActual = null;
+  // Limpiar campo badge y alerta
+  document.getElementById('badge-input').value = '';
+  const alerta = document.getElementById('badge-alert');
+  alerta.style.display = 'none';
+  alerta.className = 'alert-box';
+  show('s-badge');
+}
 
+// ── CONFETTI ─────────────────────────────────────────────────────
 function confeti(){
   const cols=['#C8102E','#F2C14E','#1B3A6B','#2E8B57','#5B2A86'];
   for(let i=0;i<50;i++){
-    const c=document.createElement('div');c.className='confetti';
-    c.style.left=Math.random()*100+'vw';c.style.background=cols[i%cols.length];
-    c.style.animationDuration=(2+Math.random()*2)+'s';c.style.animationDelay=(Math.random()*0.5)+'s';
-    document.body.appendChild(c);setTimeout(()=>c.remove(),4500);
+    const c=document.createElement('div');
+    c.className='confetti';
+    c.style.left=Math.random()*100+'vw';
+    c.style.background=cols[i%cols.length];
+    c.style.animationDuration=(2+Math.random()*2)+'s';
+    c.style.animationDelay=(Math.random()*0.5)+'s';
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),4500);
   }
 }
 </script>
