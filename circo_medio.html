@@ -553,6 +553,9 @@ let pregActual=null, catActual=null, langActual='es', opcionesOrden=[];
 let badgeActual = null;
 
 function show(id){
+  // BYPASS PREVIEW â€” quitar antes de subir
+  if(new URLSearchParams(window.location.search).get('preview')==='1'){
+    setTimeout(()=>{ show('s-cat'); }, 100);
   }
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
   document.getElementById(id).classList.add('on');
