@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -36,7 +36,7 @@ h2{text-align:center;color:var(--azul);font-size:20px;margin-bottom:8px;text-tra
 .cat-btn .ico{font-size:22px;}
 .cat-p2t{background:#1B6CA8;} .cat-p2r{background:#0e4d7a;}
 .cat-pack{background:#2E8B57;} .cat-stow{background:#D9A520;color:#1a1a1a;}
-.cat-safety{background:#C8102E;} .cat-calidad{background:#5B2A86;} .cat-procesos{background:#B5451B;grid-column:span 2;}
+.cat-safety{background:#C8102E;} .cat-calidad{background:#5B2A86;} .cat-procesos{background:#B5451B;} .cat-returns{background:#0073CF;grid-column:span 2;}
 .lang-bar{display:flex;gap:8px;justify-content:center;margin-bottom:14px;}
 .lang-btn{border:2px solid var(--dorado);background:var(--crema);border-radius:20px;padding:5px 12px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;}
 .lang-btn.act{background:var(--azul);color:#fff;border-color:var(--azul);}
@@ -553,6 +553,9 @@ let pregActual=null, catActual=null, langActual='es', opcionesOrden=[];
 let badgeActual = null;
 
 function show(id){
+  // BYPASS PREVIEW â€” quitar antes de subir
+  if(new URLSearchParams(window.location.search).get('preview')==='1'){
+    setTimeout(()=>{ show('s-cat'); }, 100);
   }
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
   document.getElementById(id).classList.add('on');
