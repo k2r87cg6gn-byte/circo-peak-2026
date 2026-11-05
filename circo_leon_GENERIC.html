@@ -81,21 +81,59 @@ h2{text-align:center;color:var(--azul);font-size:20px;margin-bottom:8px;text-tra
   });
   const _fbDb = firebase.database();
 
-  // Registros de jugadas (historial)
-  const _fbRef = _fbDb.ref('registros');
-  window._fbPush = (data) => _fbRef.push(data);
+  // --- MULTI-CENTRO: el satelite descubre solo el centro del AA ---------------
+  // Los rosters de todos los centros viven en la MISMA Firebase, en
+  // /centros/{CENTRO}/participantes. El satelite no sabe de antemano de que
+  // centro es el AA: lo busca por su login en todos los centros y lo memoriza.
+  // Opcional: ...html?centro=MAD1 fuerza un centro concreto (para pruebas).
+  var _centroAA = null;
+  try {
+    var _cq = new URLSearchParams(window.location.search).get('centro');
+    if (_cq) { _centroAA = String(_cq).trim().toUpperCase(); }
+  } catch (e) {}
 
-  // Participantes (control de acceso)
-  const _fbPart = _fbDb.ref('participantes');
+  window._fbCentroActual = function(){ return _centroAA; };
 
-  // Leer participante por login (login = key en /participantes)
-  window._fbGetParticipante = (login) => {
-    return _fbPart.child(login).once('value').then(snap => snap.val());
+  function _refPart(c){ return _fbDb.ref('centros/' + c + '/participantes'); }
+  function _refReg(c){  return _fbDb.ref('centros/' + c + '/registros'); }
+
+  window._fbGetParticipante = function(login){
+    if (_centroAA) {
+      return _refPart(_centroAA).child(login).once('value').then(function(s){
+        var v = s.val();
+        if (v) { return v; }
+        _centroAA = null;
+        return window._fbGetParticipante(login);
+      });
+    }
+    return _fbDb.ref('centros').once('value').then(function(snap){
+      var all = snap.val() || {};
+      var nombres = Object.keys(all);
+      var hit = null, hitCentro = null;
+      for (var i = 0; i < nombres.length; i++) {
+        var c = nombres[i];
+        var p = all[c] && all[c].participantes;
+        if (p && p[login]) {
+          if (p[login].activo) { hit = p[login]; hitCentro = c; break; }
+          if (!hit) { hit = p[login]; hitCentro = c; }
+        }
+      }
+      if (hit) { _centroAA = hitCentro; return hit; }
+      return _fbDb.ref('participantes').child(login).once('value').then(function(s2){
+        return s2.val() || null;
+      });
+    });
   };
 
-  // Actualizar participante tras jugar
-  window._fbUpdateParticipante = (login, data) => {
-    return _fbPart.child(login).update(data);
+  window._fbUpdateParticipante = function(login, data){
+    if (_centroAA) { return _refPart(_centroAA).child(login).update(data); }
+    return _fbDb.ref('participantes').child(login).update(data);
+  };
+
+  window._fbPush = function(data){
+    var d = data || {};
+    if (_centroAA) { d.centro = _centroAA; return _refReg(_centroAA).push(d); }
+    return _fbDb.ref('registros').push(d);
   };
 
   console.log('Firebase OK');
@@ -840,6 +878,13 @@ function resultado(tipo){
   // 2. Actualizar participante — marcar como jugado
   if(window._fbUpdateParticipante && badgeActual){
     window._fbUpdateParticipante(badgeActual, {
+      login: badgeActual,
+      cat: catActual,
+      ts: now.toISOString(),
+      jugo: true,
+      correcto: tipo==='win',
+      tiro: PTS_HUECO,
+      pts: totalPts,
       participoEnPregunta: true,
       acerto: tipo==='win',
       totalPts: totalPts,
