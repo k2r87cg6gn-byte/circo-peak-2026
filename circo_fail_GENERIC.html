@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Circo PEAK 2026</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:repeating-linear-gradient(90deg,#C8102E 0 40px,#FFF8EC 40px 80px);min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.wrap{max-width:520px;width:100%;margin:0 auto;background:#FFF8EC;min-height:100vh;box-shadow:0 0 60px rgba(0,0,0,0.3);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;text-align:center;position:relative;}
+
+.carpa{width:100%;height:46px;background:repeating-linear-gradient(90deg,#C8102E 0 36px,#FFF8EC 36px 72px);position:absolute;top:0;left:0;}
+.carpa::after{content:"";position:absolute;bottom:-22px;left:0;right:0;height:24px;clip-path:polygon(0 0,5% 100%,10% 0,15% 100%,20% 0,25% 100%,30% 0,35% 100%,40% 0,45% 100%,50% 0,55% 100%,60% 0,65% 100%,70% 0,75% 100%,80% 0,85% 100%,90% 0,95% 100%,100% 0);background:repeating-linear-gradient(90deg,#C8102E 0 36px,transparent 36px 72px);}
+
+.content{margin-top:60px;display:flex;flex-direction:column;align-items:center;gap:18px;width:100%;}
+
+.ico-main{font-size:90px;animation:bounce 1s ease-in-out infinite alternate;}
+@keyframes bounce{from{transform:translateY(0);}to{transform:translateY(-18px);}}
+
+.lang-bar{display:flex;gap:10px;justify-content:center;}
+.lang-btn{border:2px solid #F2C14E;background:#FFF8EC;border-radius:20px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;}
+.lang-btn.act{background:#1B3A6B;color:#fff;border-color:#1B3A6B;}
+
+.card{background:#fff;border:3px solid #F2C14E;border-radius:18px;padding:28px 24px;box-shadow:0 6px 0 #D9A520;width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px;}
+
+.titulo{font-size:30px;font-weight:900;color:#C8102E;text-transform:uppercase;letter-spacing:1px;text-shadow:3px 3px 0 #F2C14E;line-height:1.1;}
+.subtitulo{font-size:16px;color:#1B3A6B;font-weight:700;line-height:1.4;}
+.mensaje{font-size:14px;color:#6a584c;line-height:1.5;}
+.animals-bar{font-size:38px;display:flex;gap:16px;justify-content:center;margin-top:4px;}
+.foot{font-size:11px;color:#b0a090;letter-spacing:1px;}
+
+.rain-animal{position:fixed;top:-80px;animation:caer linear forwards;pointer-events:none;z-index:99;}
+@keyframes caer{to{transform:translateY(110vh) rotate(360deg);opacity:0;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="carpa"></div>
+  <div class="content">
+
+    <div class="lang-bar">
+      <button class="lang-btn act" onclick="setLang('es',this)">Español</button>
+      <button class="lang-btn" onclick="setLang('en',this)">English</button>
+      <button class="lang-btn" onclick="setLang('ar',this)">العربية</button>
+    </div>
+
+    <div class="ico-main">&#9918;</div>
+
+    <div class="card" id="main-card">
+      <div class="titulo" id="txt-titulo">¡No has acertado la pelota!</div>
+      <div class="subtitulo" id="txt-sub">Tienes que lanzar la pelota en tu animal favorito</div>
+      <div class="mensaje" id="txt-msg">Acude a las mesas, lanza tu pelota, ¡acierta y entonces escanea el QR!</div>
+      <div class="animals-bar">&#128024; &#129313; &#129409;</div>
+    </div>
+
+    <div class="foot">L&amp;D &middot; THE GRAND PEAK 2026</div>
+  </div>
+</div>
+
+<script>
+const TEXTS = {
+  es: {
+    titulo: '&#161;No has acertado la pelota!',
+    sub: 'Tienes que lanzar la pelota en tu animal favorito',
+    msg: 'Acude a las mesas, lanza tu pelota, &#161;acierta y entonces escanea el QR!',
+    dir: 'ltr'
+  },
+  en: {
+    titulo: 'You missed the shot!',
+    sub: 'You need to throw the ball into your favourite animal',
+    msg: 'Go to the tables, throw your ball, score and then scan the QR!',
+    dir: 'ltr'
+  },
+  ar: {
+    titulo: '\u0644\u0645 \u062a\u0635\u0628 \u0627\u0644\u0643\u0631\u0629!',
+    sub: '\u064a\u062c\u0628 \u0623\u0646 \u062a\u0631\u0645\u064a \u0627\u0644\u0643\u0631\u0629 \u0641\u064a \u062d\u064a\u0648\u0627\u0646\u0643 \u0627\u0644\u0645\u0641\u0636\u0644',
+    msg: '\u0627\u0630\u0647\u0628 \u0625\u0644\u0649 \u0627\u0644\u0637\u0627\u0648\u0644\u0627\u062a\u060c \u0627\u0631\u0645\u0650 \u0643\u0631\u062a\u0643\u060c \u0623\u0635\u0628 \u062b\u0645 \u0627\u0645\u0633\u062d \u0631\u0645\u0632 QR!',
+    dir: 'rtl'
+  }
+};
+
+function setLang(lang, btn) {
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('act'));
+  btn.classList.add('act');
+  const t = TEXTS[lang];
+  document.getElementById('txt-titulo').innerHTML = t.titulo;
+  document.getElementById('txt-sub').innerHTML = t.sub;
+  document.getElementById('txt-msg').innerHTML = t.msg;
+  document.getElementById('main-card').style.direction = t.dir;
+}
+
+// Lluvia de animales
+const ANIMALES = ['\uD83D\uDC18','\uD83E\uDD21','\uD83E\uDD81','\uD83C\uDFAA','\u2B50'];
+function lanzarAnimal() {
+  const el = document.createElement('div');
+  el.className = 'rain-animal';
+  el.textContent = ANIMALES[Math.floor(Math.random() * ANIMALES.length)];
+  el.style.left = (Math.random() * 100) + 'vw';
+  const dur = 2.5 + Math.random() * 2.5;
+  el.style.animationDuration = dur + 's';
+  el.style.fontSize = (28 + Math.floor(Math.random() * 30)) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), dur * 1000 + 200);
+}
+
+for(let i = 0; i < 15; i++) setTimeout(lanzarAnimal, i * 80);
+setInterval(lanzarAnimal, 350);
+</script>
+</body>
+</html>
