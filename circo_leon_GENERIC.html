@@ -166,8 +166,6 @@ h2{text-align:center;color:var(--azul);font-size:20px;margin-bottom:8px;text-tra
           <input class="badge-field" type="text" id="badge-input" placeholder="Ej: gontonic" maxlength="20" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
           <div class="alert-box" id="badge-alert"></div>
           <button class="btn" id="badge-btn" onclick="verificarBadge()">Continuar</button>
-        <!-- âš ï¸ BYPASS TEMPORAL - QUITAR ANTES DEL EVENTO -->
-        <button class="btn" id="bypass-btn" style="margin-top:10px;background:#555;font-size:0.85em;opacity:0.75;" onclick="bypassLogin()">&#128295; Entrar sin login (TEST)</button>
         </div>
       </div>
     </div>
@@ -779,13 +777,6 @@ document.getElementById('badge-input').addEventListener('keydown', function(e){
 });
 
 // ── CATEGORIA ───────────────────────────────────────────────────
-// âš ï¸ BYPASS TEMPORAL - QUITAR ANTES DEL EVENTO
-function bypassLogin(){
-  window.badgeActual = 'TEST_USER';
-  window.loginActual = 'TEST_USER';
-  show('s-cat');
-}
-
 function elegirCat(cat){
   catActual = cat;
   const pool = PREG[cat];
